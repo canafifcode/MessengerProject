@@ -1,3 +1,4 @@
+// ServerController.java
 package com.example.messenger;
 
 import javafx.application.Platform;
@@ -22,7 +23,6 @@ import javafx.stage.FileChooser;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -39,7 +39,8 @@ public class ServerController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            server = new Server(new ServerSocket(7564)); // Match client port
+            server = new Server(new ServerSocket(1234));
+            server.setVBox(vbox_messages);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error creating server");
@@ -52,16 +53,15 @@ public class ServerController implements Initializable {
             }
         });
 
-        server.receiveMessageFromClient(vbox_messages);
-
         button_send.setOnAction(actionEvent -> {
             String messageToSend = tf_message.getText();
             if (!messageToSend.isEmpty()) {
+                String fullMessage = "Server: " + messageToSend;
                 HBox hBox = new HBox();
-                hBox.setAlignment(Pos.CENTER_RIGHT); // Server messages right-aligned
+                hBox.setAlignment(Pos.CENTER_RIGHT);
                 hBox.setPadding(new Insets(5, 5, 5, 10));
 
-                Text text = new Text(messageToSend);
+                Text text = new Text(fullMessage);
                 TextFlow textFlow = new TextFlow(text);
                 textFlow.setStyle("-fx-color: rgb(239,242,255); -fx-background-color: rgb(15,125,242); -fx-background-radius: 20px;");
                 textFlow.setPadding(new Insets(5, 10, 5, 10));
@@ -70,7 +70,7 @@ public class ServerController implements Initializable {
                 hBox.getChildren().add(textFlow);
                 vbox_messages.getChildren().add(hBox);
 
-                server.sendMessageToClient(messageToSend);
+                server.broadcastMessage(fullMessage, null);
                 tf_message.clear();
             }
         });
@@ -82,11 +82,7 @@ public class ServerController implements Initializable {
             if (file != null) {
                 try {
                     byte[] imageBytes = Files.readAllBytes(file.toPath());
-                    server.sendMessageToClient("IMAGE:" + imageBytes.length);
-                    OutputStream os = server.getSocket().getOutputStream();
-                    os.write(imageBytes);
-                    os.flush();
-                    // Display sent image locally
+                    // Display locally
                     Platform.runLater(() -> {
                         Image image = new Image(new ByteArrayInputStream(imageBytes));
                         ImageView imageView = new ImageView(image);
@@ -94,8 +90,12 @@ public class ServerController implements Initializable {
                         imageView.setPreserveRatio(true);
                         HBox hBox = new HBox(imageView);
                         hBox.setAlignment(Pos.CENTER_RIGHT);
+                        Text text = new Text("Server: ");
+                        hBox.getChildren().add(0, text);
                         vbox_messages.getChildren().add(hBox);
                     });
+                    // Broadcast to all clients
+                    server.broadcastImage(imageBytes, null);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -103,12 +103,12 @@ public class ServerController implements Initializable {
         });
     }
 
-    public static void addLabel(String messageFromClient, VBox vbox) {
+    public static void addLabel(String message, VBox vbox) {
         HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT); // Client messages left-aligned
+        hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setPadding(new Insets(5, 5, 5, 10));
 
-        Text text = new Text(messageFromClient);
+        Text text = new Text(message);
         TextFlow textFlow = new TextFlow(text);
         textFlow.setStyle("-fx-background-color: rgb(233,233,235); -fx-background-radius: 20px;");
         textFlow.setPadding(new Insets(5, 10, 5, 10));

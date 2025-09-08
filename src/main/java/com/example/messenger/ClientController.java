@@ -1,3 +1,4 @@
+// ClientController.java
 package com.example.messenger;
 
 import javafx.application.Platform;
@@ -10,6 +11,8 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -17,9 +20,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.FileChooser;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -27,7 +30,7 @@ import java.util.ResourceBundle;
 
 public class ClientController implements Initializable {
     @FXML private Button button_send, button_image;
-    @FXML private TextField tf_message;
+    @FXML private TextField tf_message, tf_username;
     @FXML private VBox vbox_messages;
     @FXML private ScrollPane sp_main;
 
@@ -35,15 +38,12 @@ public class ClientController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        try {
-            client = new Client(new Socket("localhost", 7564)); // Match server port
-            client.receiveMessageFromServer(vbox_messages);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error creating client in ClientController.java");
-        }
+        button_send.setDisable(true);
+        tf_message.setDisable(true);
+        button_image.setDisable(true);
 
-        // Auto-scroll to bottom when new messages are added
+        tf_username.setOnAction(event -> connectWithUsername());
+
         vbox_messages.heightProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
@@ -51,15 +51,15 @@ public class ClientController implements Initializable {
             }
         });
 
-        // Send button action
         button_send.setOnAction(event -> {
             String messageToSend = tf_message.getText();
             if (!messageToSend.isEmpty()) {
+                String fullMessage = tf_username.getText() + ": " + messageToSend;
                 HBox hBox = new HBox();
                 hBox.setAlignment(Pos.CENTER_RIGHT);
                 hBox.setPadding(new Insets(5, 5, 5, 10));
 
-                Text text = new Text(messageToSend);
+                Text text = new Text(fullMessage);
                 TextFlow textFlow = new TextFlow(text);
                 textFlow.setStyle("-fx-color: rgb(239,242,255); -fx-background-color: rgb(15,125,242); -fx-background-radius: 20px;");
                 textFlow.setPadding(new Insets(5, 10, 5, 10));
@@ -80,12 +80,21 @@ public class ClientController implements Initializable {
             if (file != null) {
                 try {
                     byte[] imageBytes = Files.readAllBytes(file.toPath());
-                    // Send type prefix to distinguish from text
-                    client.sendMessageToServer("IMAGE:" + imageBytes.length);
-                    // Send bytes
-                    OutputStream os = client.getSocket().getOutputStream();
-                    os.write(imageBytes);
-                    os.flush();
+                    // Display locally
+                    HBox hBox = new HBox();
+                    hBox.setAlignment(Pos.CENTER_RIGHT);
+                    hBox.setPadding(new Insets(5, 5, 5, 10));
+
+                    Image image = new Image(new ByteArrayInputStream(imageBytes));
+                    ImageView imageView = new ImageView(image);
+                    imageView.setFitWidth(200);
+                    imageView.setPreserveRatio(true);
+                    Text text = new Text(tf_username.getText() + ": ");
+                    hBox.getChildren().addAll(text, imageView);
+                    vbox_messages.getChildren().add(hBox);
+
+                    // Send to server
+                    client.sendImageToServer(imageBytes);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -93,9 +102,26 @@ public class ClientController implements Initializable {
         });
     }
 
+    private void connectWithUsername() {
+        String username = tf_username.getText();
+        if (!username.isEmpty()) {
+            try {
+                client = new Client(new Socket("localhost", 1234), username);
+                client.receiveMessageFromServer(vbox_messages);
+                tf_username.setDisable(true);
+                button_send.setDisable(false);
+                tf_message.setDisable(false);
+                button_image.setDisable(false);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Error creating client in ClientController.java");
+            }
+        }
+    }
+
     public static void addLabel(String messageFromServer, VBox vbox) {
         HBox hBox = new HBox();
-        hBox.setAlignment(Pos.CENTER_LEFT); // Received messages on left
+        hBox.setAlignment(Pos.CENTER_LEFT);
         hBox.setPadding(new Insets(5, 5, 5, 10));
 
         Text text = new Text(messageFromServer);

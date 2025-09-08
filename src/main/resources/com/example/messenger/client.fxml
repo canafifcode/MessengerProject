@@ -5,7 +5,8 @@
 <AnchorPane id="ap_main" prefHeight="400" prefWidth="500" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.messenger.ClientController">
     <children>
         <Label layoutX="150" layoutY="20" text="Messenger Client" />
-        <ScrollPane fx:id="sp_main" layoutX="20" layoutY="60" prefHeight="280" prefWidth="460" fitToWidth="true">
+        <TextField fx:id="tf_username" layoutX="20" layoutY="50" prefWidth="380" promptText="Enter username and press Enter" />
+        <ScrollPane fx:id="sp_main" layoutX="20" layoutY="90" prefHeight="240" prefWidth="460" fitToWidth="true">
             <content>
                 <VBox fx:id="vbox_messages" prefWidth="450" />
             </content>

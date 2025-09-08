@@ -1,3 +1,4 @@
+// Client.java
 package com.example.messenger;
 
 import javafx.application.Platform;
@@ -7,7 +8,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import javax.swing.text.Element;
 import java.io.*;
 import java.net.Socket;
 
@@ -15,16 +15,22 @@ public class Client {
     private Socket socket;
     private BufferedReader bufferedReader;
     private BufferedWriter bufferedWriter;
+    private String username;
 
-    public Client(Socket socket) {
+    public Client(Socket socket, String username) {
         try {
             this.socket = socket;
+            this.username = username;
             this.bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             this.bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+            // Send username to server
+            bufferedWriter.write(username);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Error initializing client.");
-            closeEverything(socket, bufferedReader, bufferedWriter);
+            closeEverything();
         }
     }
 
@@ -36,7 +42,21 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("Error sending message to server.");
-            closeEverything(socket, bufferedReader, bufferedWriter);
+            closeEverything();
+        }
+    }
+
+    public void sendImageToServer(byte[] imageBytes) {
+        try {
+            bufferedWriter.write("IMAGE:" + imageBytes.length);
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+            OutputStream os = socket.getOutputStream();
+            os.write(imageBytes);
+            os.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            closeEverything();
         }
     }
 
@@ -45,6 +65,9 @@ public class Client {
             while (socket.isConnected()) {
                 try {
                     String messageFromServer = bufferedReader.readLine();
+                    if (messageFromServer == null) {
+                        break;
+                    }
                     if (messageFromServer.startsWith("IMAGE:")) {
                         int size = Integer.parseInt(messageFromServer.substring(6));
                         byte[] imageData = new byte[size];
@@ -57,12 +80,12 @@ public class Client {
                         }
                         Platform.runLater(() -> {
                             Image image = new Image(new ByteArrayInputStream(imageData));
-                            javafx.scene.image.ImageView imageView= new ImageView(image);
+                            ImageView imageView = new ImageView(image);
                             imageView.setFitWidth(200);
                             imageView.setPreserveRatio(true);
-                            HBox hbox= new HBox(imageView);
-                            hbox.setAlignment(Pos.CENTER_LEFT);
-                            vBox.getChildren().add(hbox);
+                            HBox hBox = new HBox(imageView);
+                            hBox.setAlignment(Pos.CENTER_LEFT);
+                            vBox.getChildren().add(hBox);
                         });
                     } else {
                         ClientController.addLabel(messageFromServer, vBox);
@@ -70,14 +93,14 @@ public class Client {
                 } catch (IOException e) {
                     e.printStackTrace();
                     System.out.println("Error receiving message from server.");
-                    closeEverything(socket, bufferedReader, bufferedWriter);
+                    closeEverything();
                     break;
                 }
             }
         }).start();
     }
 
-    public void closeEverything(Socket socket, BufferedReader bufferedReader, BufferedWriter bufferedWriter) {
+    public void closeEverything() {
         try {
             if (bufferedReader != null) {
                 bufferedReader.close();
