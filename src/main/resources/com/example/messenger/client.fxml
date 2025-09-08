@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.example.messenger.ClientController"
-            prefHeight="400.0" prefWidth="600.0">
-
+<AnchorPane id="ap_main" prefHeight="400" prefWidth="500" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.messenger.ClientController">
+    <children>
+        <Label layoutX="150" layoutY="20" text="Messenger Client" />
+        <ScrollPane fx:id="sp_main" layoutX="20" layoutY="60" prefHeight="280" prefWidth="460" fitToWidth="true">
+            <content>
+                <VBox fx:id="vbox_messages" prefWidth="450" />
+            </content>
+        </ScrollPane>
+        <TextField fx:id="tf_message" layoutX="20" layoutY="350" prefWidth="380" />
+        <Button fx:id="button_send" layoutX="410" layoutY="350" text="Send" />
+        <Button fx:id="button_image" layoutX="20" layoutY="380" text="Send Image" />
+    </children>
 </AnchorPane>

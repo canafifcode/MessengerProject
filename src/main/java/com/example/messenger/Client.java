@@ -1,7 +1,13 @@
 package com.example.messenger;
 
+import javafx.application.Platform;
+import javafx.geometry.Pos;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
+import javax.swing.text.Element;
 import java.io.*;
 import java.net.Socket;
 
@@ -39,7 +45,28 @@ public class Client {
             while (socket.isConnected()) {
                 try {
                     String messageFromServer = bufferedReader.readLine();
-                    ClientController.addLabel(messageFromServer, vBox);
+                    if (messageFromServer.startsWith("IMAGE:")) {
+                        int size = Integer.parseInt(messageFromServer.substring(6));
+                        byte[] imageData = new byte[size];
+                        InputStream is = socket.getInputStream();
+                        int bytesRead = 0;
+                        while (bytesRead < size) {
+                            int read = is.read(imageData, bytesRead, size - bytesRead);
+                            if (read == -1) break;
+                            bytesRead += read;
+                        }
+                        Platform.runLater(() -> {
+                            Image image = new Image(new ByteArrayInputStream(imageData));
+                            javafx.scene.image.ImageView imageView= new ImageView(image);
+                            imageView.setFitWidth(200);
+                            imageView.setPreserveRatio(true);
+                            HBox hbox= new HBox(imageView);
+                            hbox.setAlignment(Pos.CENTER_LEFT);
+                            vBox.getChildren().add(hbox);
+                        });
+                    } else {
+                        ClientController.addLabel(messageFromServer, vBox);
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                     System.out.println("Error receiving message from server.");

@@ -1,28 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
 
-<AnchorPane blendMode="OVERLAY" prefHeight="400.0" prefWidth="470.0" style="-fx-background-color: silver;" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.messenger.ServerController">
+<AnchorPane id="ap_main" prefHeight="400" prefWidth="500" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.messenger.ServerController">
     <children>
-        <Label layoutX="159.0" layoutY="14.0" text="Messenger Server">
-         <font>
-            <Font name="Arial Rounded MT Bold" size="17.0" />
-         </font></Label>
-        <ScrollPane id="sp_main" fitToWidth="true" layoutX="20.0" layoutY="40.0" prefHeight="280" prefWidth="432.0" style="-fx-background-color: deep silver;">
+        <Label layoutX="150" layoutY="20" text="Messenger Server" />
+        <ScrollPane fx:id="sp_main" layoutX="20" layoutY="60" prefHeight="280" prefWidth="460" fitToWidth="true">
             <content>
-                <VBox id="vbox_messages" prefWidth="450" />
+                <VBox fx:id="vbox_messages" prefWidth="450" />
             </content>
         </ScrollPane>
-        <TextField id="tf_message" layoutX="20.0" layoutY="337.0" prefWidth="380" />
-        <Button id="button_send" layoutX="410.0" layoutY="337.0" style="-fx-background-color: Blue;" text="Send" textFill="WHITE">
-         <font>
-            <Font name="System Bold" size="12.0" />
-         </font></Button>
-        <Button id="button_image" layoutX="20.0" layoutY="363.0" style="-fx-background-color: red;" text="Send Image" textFill="WHITE">
-         <font>
-            <Font name="Bell MT Bold" size="10.0" />
-         </font></Button>
+        <TextField fx:id="tf_message" layoutX="20" layoutY="350" prefWidth="380" />
+        <Button fx:id="button_send" layoutX="410" layoutY="350" text="Send" />
+        <Button fx:id="button_image" layoutX="20" layoutY="380" text="Send Image" />
     </children>
 </AnchorPane>
